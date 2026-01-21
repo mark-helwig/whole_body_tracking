@@ -1,0 +1,5 @@
+[default]
+entity = mlh_hcrl
+project = whole_body_tracking
+base_url = https://api.wandb.ai
+

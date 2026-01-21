@@ -80,3 +80,13 @@ def feet_contact_time(env: ManagerBasedRLEnv, sensor_cfg: SceneEntityCfg, thresh
     last_contact_time = contact_sensor.data.last_contact_time[:, sensor_cfg.body_ids]
     reward = torch.sum((last_contact_time < threshold) * first_air, dim=-1)
     return reward
+
+def feet_contact_slip_exp(env: ManagerBasedRLEnv, command_name: str, std: float, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
+    command: MotionCommand = env.command_manager.get_term(command_name)
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    first_contact = contact_sensor.compute_first_contact(env.step_dt, env.physics_dt)[:, sensor_cfg.body_ids]
+    body_indexes = _get_body_indexes(command, contact_sensor.body_names)
+    error = torch.sum(
+        torch.square(
+            torch.where(first_contact, command.robot_body_lin_vel_w[:, body_indexes], torch.zeros_like(command.robot_body_lin_vel_w[:, body_indexes]))))
+    return torch.exp(-error.mean(-1) / std**2)
