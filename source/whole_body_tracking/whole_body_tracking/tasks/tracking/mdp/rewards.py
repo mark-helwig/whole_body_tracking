@@ -81,6 +81,7 @@ def feet_contact_time(env: ManagerBasedRLEnv, sensor_cfg: SceneEntityCfg, thresh
     reward = torch.sum((last_contact_time < threshold) * first_air, dim=-1)
     return reward
 
+## Reward for minimizing foot slip during contact
 def feet_contact_slip_exp(env: ManagerBasedRLEnv, command_name: str, std: float, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
     command: MotionCommand = env.command_manager.get_term(command_name)
     contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
