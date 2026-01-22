@@ -85,8 +85,9 @@ def feet_contact_slip_exp(env: ManagerBasedRLEnv, command_name: str, std: float,
     command: MotionCommand = env.command_manager.get_term(command_name)
     contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
     first_contact = contact_sensor.compute_first_contact(env.step_dt, env.physics_dt)[:, sensor_cfg.body_ids]
-    body_indexes = _get_body_indexes(command, contact_sensor.body_names)
-    error = torch.sum(
-        torch.square(
-            torch.where(first_contact, command.robot_body_lin_vel_w[:, body_indexes], torch.zeros_like(command.robot_body_lin_vel_w[:, body_indexes]))))
+    body_indexes = _get_body_indexes(command, sensor_cfg.body_names)
+    contact_mask = first_contact.unsqueeze(-1)
+    body_lin_vel = command.robot_body_lin_vel_w[:, body_indexes]
+    slip_vel = torch.where(contact_mask, body_lin_vel, torch.zeros_like(body_lin_vel))
+    error = torch.sum(torch.square(slip_vel), dim=-1)
     return torch.exp(-error.mean(-1) / std**2)
